@@ -108,6 +108,34 @@ bash scripts/daemon.sh start
 | `CTI_AUTO_APPROVE` | 自动批准工具权限请求 |
 | `CTI_CODEX_*` | Codex 运行时覆盖项（审批策略、沙箱模式、推理强度、网络访问等） |
 
+## 同时跑两套运行时
+
+单个守护进程在启动时只会绑定**一种**运行时，该进程上的所有会话共用它。想让 Codex 和 Claude 并行使用，就跑**两个守护进程**，一个运行时一个，彼此完全隔离。每个守护进程都需要：
+
+- **独立的仓库克隆** —— macOS launchd 的服务标识是由仓库路径派生出来的，所以两个守护进程必须放在两个不同的目录里；
+- **独立的数据目录**（通过 `CTI_HOME` 指定，各自的配置、会话、pid、日志）；
+- **独立的 bot token** —— 你会和两个不同的机器人对话。
+
+```bash
+# 机器人 A —— Codex
+git clone https://github.com/leoshenzh/codex-on-telegram.git cot-codex
+cd cot-codex && npm install && npm run build
+mkdir -p ~/.claude-to-im-codex
+cp config.env.example ~/.claude-to-im-codex/config.env
+# 编辑：CTI_RUNTIME=codex，CTI_TG_BOT_TOKEN=<机器人 A 的 token>，……
+CTI_HOME=~/.claude-to-im-codex bash scripts/daemon.sh start
+
+# 机器人 B —— Claude（独立克隆、独立数据目录、独立 token）
+git clone https://github.com/leoshenzh/codex-on-telegram.git cot-claude
+cd cot-claude && npm install && npm run build
+mkdir -p ~/.claude-to-im-claude
+cp config.env.example ~/.claude-to-im-claude/config.env
+# 编辑：CTI_RUNTIME=claude，CTI_TG_BOT_TOKEN=<机器人 B 的 token>，……
+CTI_HOME=~/.claude-to-im-claude bash scripts/daemon.sh start
+```
+
+现在两个机器人并行运行 —— 想用哪个运行时就给哪个发消息。对该克隆执行任何 `daemon.sh` 命令（`stop` / `status` / `logs`）时，都要带上同一个 `CTI_HOME=…`。
+
 ## 在 Telegram 中使用
 
 - **直接发一条消息** —— 无论是在私聊、群组还是话题中：如果还没有任何绑定，会自动创建一个会话。

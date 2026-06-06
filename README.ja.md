@@ -108,6 +108,34 @@ bash scripts/daemon.sh start
 | `CTI_AUTO_APPROVE` | ツールの権限リクエストを自動承認 |
 | `CTI_CODEX_*` | Codex ランタイムの上書き項目（承認ポリシー、サンドボックスモード、推論強度、ネットワークアクセスなど） |
 
+## 両方のランタイムを同時に動かす
+
+1 つのデーモンは起動時に**1 つ**のランタイムへバインドし、そのデーモン上のすべてのセッションがそれを共有します。Codex と Claude を並行して使うには、ランタイムごとに**2 つのデーモン**を、完全に分離して動かします。各デーモンには次が必要です：
+
+- **専用のクローン** —— macOS launchd のサービスラベルはリポジトリのパスから導出されるため、2 つのデーモンは別々のディレクトリに置く必要があります；
+- **専用のデータホーム**（`CTI_HOME` で指定。設定・セッション・pid・ログがそれぞれ独立）；
+- **専用の bot トークン** —— 2 つの異なるボットと対話することになります。
+
+```bash
+# ボット A —— Codex
+git clone https://github.com/leoshenzh/codex-on-telegram.git cot-codex
+cd cot-codex && npm install && npm run build
+mkdir -p ~/.claude-to-im-codex
+cp config.env.example ~/.claude-to-im-codex/config.env
+# 編集：CTI_RUNTIME=codex、CTI_TG_BOT_TOKEN=<ボット A のトークン>、…
+CTI_HOME=~/.claude-to-im-codex bash scripts/daemon.sh start
+
+# ボット B —— Claude（別クローン・別データホーム・別トークン）
+git clone https://github.com/leoshenzh/codex-on-telegram.git cot-claude
+cd cot-claude && npm install && npm run build
+mkdir -p ~/.claude-to-im-claude
+cp config.env.example ~/.claude-to-im-claude/config.env
+# 編集：CTI_RUNTIME=claude、CTI_TG_BOT_TOKEN=<ボット B のトークン>、…
+CTI_HOME=~/.claude-to-im-claude bash scripts/daemon.sh start
+```
+
+これで 2 つのボットが並行して動きます —— 使いたいランタイムのボットにメッセージを送るだけです。そのクローンに対する `daemon.sh` コマンド（`stop` / `status` / `logs`）では、毎回同じ `CTI_HOME=…` を指定してください。
+
 ## Telegram からの使い方
 
 - **メッセージを送るだけ** —— プライベートチャット、グループ、トピックのいずれでも、まだ何もバインドされていなければセッションが自動的に作成されます。

@@ -108,6 +108,34 @@ The full list lives in [`config.env.example`](./config.env.example). The most co
 | `CTI_AUTO_APPROVE` | Auto-approve tool permission prompts |
 | `CTI_CODEX_*` | Codex runtime overrides (approval policy, sandbox mode, reasoning effort, network access, …) |
 
+## Running both runtimes at once
+
+A single daemon binds to **one** runtime, chosen once at startup — every session on that daemon shares it. To use Codex *and* Claude side by side, run **two daemons**, one per runtime, fully isolated. Each daemon needs:
+
+- its **own clone** of the repo — the macOS launchd service label is derived from the repo's path, so two daemons must live in two different directories;
+- its **own data home** via `CTI_HOME` (separate config, sessions, pid, logs);
+- its **own bot token** — you'll talk to two different bots.
+
+```bash
+# Bot A — Codex
+git clone https://github.com/leoshenzh/codex-on-telegram.git cot-codex
+cd cot-codex && npm install && npm run build
+mkdir -p ~/.claude-to-im-codex
+cp config.env.example ~/.claude-to-im-codex/config.env
+# edit: CTI_RUNTIME=codex, CTI_TG_BOT_TOKEN=<bot A token>, …
+CTI_HOME=~/.claude-to-im-codex bash scripts/daemon.sh start
+
+# Bot B — Claude (separate clone, separate home, separate token)
+git clone https://github.com/leoshenzh/codex-on-telegram.git cot-claude
+cd cot-claude && npm install && npm run build
+mkdir -p ~/.claude-to-im-claude
+cp config.env.example ~/.claude-to-im-claude/config.env
+# edit: CTI_RUNTIME=claude, CTI_TG_BOT_TOKEN=<bot B token>, …
+CTI_HOME=~/.claude-to-im-claude bash scripts/daemon.sh start
+```
+
+Now you have two bots running in parallel — message whichever runtime you want. Pass the same `CTI_HOME=…` for that clone on every `daemon.sh` command (`stop` / `status` / `logs`).
+
 ## Using it from Telegram
 
 - **Just send a message** in a private chat, group, or topic — if nothing is bound yet, a session is created automatically.
