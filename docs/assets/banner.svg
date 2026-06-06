@@ -1,0 +1,70 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 320" width="1280" height="320" role="img" aria-label="Codex on Telegram — Drive your local Claude Code and OpenAI Codex coding sessions from Telegram">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#0f172a"/>
+      <stop offset="0.55" stop-color="#16204a"/>
+      <stop offset="1" stop-color="#1e1b4b"/>
+    </linearGradient>
+    <linearGradient id="accent" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#818cf8"/>
+      <stop offset="1" stop-color="#38bdf8"/>
+    </linearGradient>
+  </defs>
+
+  <rect width="1280" height="320" fill="url(#bg)"/>
+  <!-- subtle top accent line -->
+  <rect x="0" y="0" width="1280" height="4" fill="url(#accent)"/>
+
+  <!-- faint grid dots motif (decorative, low opacity) -->
+  <g fill="#ffffff" opacity="0.05">
+    <circle cx="1080" cy="70" r="3"/>
+    <circle cx="1130" cy="70" r="3"/>
+    <circle cx="1180" cy="70" r="3"/>
+    <circle cx="1080" cy="120" r="3"/>
+    <circle cx="1130" cy="120" r="3"/>
+    <circle cx="1180" cy="120" r="3"/>
+    <circle cx="1080" cy="170" r="3"/>
+    <circle cx="1130" cy="170" r="3"/>
+    <circle cx="1180" cy="170" r="3"/>
+  </g>
+
+  <!-- Glyph: chat bubble + terminal prompt -->
+  <g transform="translate(80,96)">
+    <rect x="0" y="0" width="128" height="96" rx="20" fill="#0b1220" stroke="url(#accent)" stroke-width="2.5"/>
+    <!-- bubble tail -->
+    <path d="M 26 96 L 26 124 L 54 96 Z" fill="#0b1220" stroke="url(#accent)" stroke-width="2.5" stroke-linejoin="round"/>
+    <!-- terminal prompt chevron -->
+    <path d="M 30 38 L 52 56 L 30 74" fill="none" stroke="#38bdf8" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
+    <!-- prompt underscore / cursor line -->
+    <line x1="64" y1="74" x2="98" y2="74" stroke="#818cf8" stroke-width="6" stroke-linecap="round"/>
+  </g>
+
+  <!-- Title -->
+  <text x="248" y="150" font-family="-apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif" font-size="68" font-weight="700" fill="#f8fafc" letter-spacing="-1">Codex on Telegram</text>
+
+  <!-- Tagline -->
+  <text x="250" y="196" font-family="-apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif" font-size="25" font-weight="400" fill="#a5b4fc">Drive your local Claude Code &amp; OpenAI Codex coding sessions from Telegram.</text>
+
+  <!-- Pills -->
+  <g font-family="-apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif" font-size="20" font-weight="600">
+    <g>
+      <rect x="250" y="228" width="118" height="40" rx="20" fill="#1e293b" stroke="#475569" stroke-width="1.5"/>
+      <text x="309" y="254" fill="#e2e8f0" text-anchor="middle">Claude</text>
+    </g>
+    <g>
+      <rect x="382" y="228" width="112" height="40" rx="20" fill="#1e293b" stroke="#475569" stroke-width="1.5"/>
+      <text x="438" y="254" fill="#e2e8f0" text-anchor="middle">Codex</text>
+    </g>
+    <g>
+      <rect x="508" y="228" width="134" height="40" rx="20" fill="#1e293b" stroke="#475569" stroke-width="1.5"/>
+      <text x="575" y="254" fill="#e2e8f0" text-anchor="middle">Telegram</text>
+    </g>
+  </g>
+
+  <!-- self-hosted badge, right side -->
+  <g font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="16">
+    <rect x="1040" y="244" width="160" height="34" rx="8" fill="#0b1220" stroke="#334155" stroke-width="1.5"/>
+    <circle cx="1062" cy="261" r="5" fill="#34d399"/>
+    <text x="1078" y="266" fill="#94a3b8">self-hosted</text>
+  </g>
+</svg>
