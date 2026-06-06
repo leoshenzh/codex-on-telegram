@@ -18,9 +18,11 @@
 
 Codex on Telegram 是一个自托管的桥接服务，让你**从 Telegram 聊天中启动、绑定并续接本地的 AI 编程会话 —— 无论是 Claude Code 还是 OpenAI Codex**。你可以用手机随时开工，在外出途中回复权限请求，并在守护进程重启后续接完全相同的会话。它以一个轻量的 macOS daemon 形式运行，并且按设计只与 Telegram 通信。
 
-```
-Telegram  ⇄  bridge daemon (this repo)  ⇄  Claude Code / OpenAI Codex  ⇄  your local project
-```
+<p align="center">
+  <img src="./docs/diagrams/architecture.zh.png" alt="Codex on Telegram — 架构与消息流" width="900">
+</p>
+
+<p align="center"><sub>Telegram ⇄ 桥接守护进程（本仓库） ⇄ Claude Code / OpenAI Codex ⇄ 你的本地项目 · <a href="./docs/diagrams/architecture.zh.html">交互式 HTML</a></sub></p>
 
 ## ✨ 亮点
 

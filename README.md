@@ -18,9 +18,11 @@
 
 Codex on Telegram is a self-hosted bridge that lets you **start, bind, and continue local AI coding sessions — Claude Code or OpenAI Codex — from a Telegram chat**. Kick off work from your phone, answer permission prompts on the go, and resume the exact same session after a daemon restart. It runs as a small macOS daemon and speaks Telegram only, by design.
 
-```
-Telegram  ⇄  bridge daemon (this repo)  ⇄  Claude Code / OpenAI Codex  ⇄  your local project
-```
+<p align="center">
+  <img src="./docs/diagrams/architecture.png" alt="Codex on Telegram — architecture & message flow" width="900">
+</p>
+
+<p align="center"><sub>Telegram ⇄ bridge daemon (this repo) ⇄ Claude Code / OpenAI Codex ⇄ your local project · <a href="./docs/diagrams/architecture.html">interactive HTML</a></sub></p>
 
 ## ✨ Highlights
 

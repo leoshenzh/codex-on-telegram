@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>codex-on-telegram 架构图</title>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'JetBrains Mono', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', monospace;
+      background: #020617;
+      min-height: 100vh;
+      padding: 2rem;
+      color: #e2e8f0;
+    }
+    .container { max-width: 1240px; margin: 0 auto; }
+    .header { margin-bottom: 1.5rem; }
+    .header-row { display: flex; align-items: center; gap: 0.85rem; margin-bottom: 0.4rem; }
+    .pulse-dot { width: 12px; height: 12px; background: #38bdf8; border-radius: 50%; animation: pulse 2s infinite; }
+    @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
+    h1 { font-size: 1.45rem; font-weight: 700; letter-spacing: -0.01em; color: #f8fafc; }
+    .subtitle { color: #94a3b8; font-size: 0.85rem; margin-left: 1.85rem; max-width: 900px; line-height: 1.6; }
+    .diagram-container {
+      background: rgba(15, 23, 42, 0.5);
+      border-radius: 1rem;
+      border: 1px solid #1e293b;
+      padding: 1.25rem;
+      overflow-x: auto;
+    }
+    svg { width: 100%; min-width: 1000px; display: block; }
+    /* SVG text styles */
+    .bt { fill: #f1f5f9; font-size: 12.5px; font-weight: 600; text-anchor: middle; }
+    .bs { fill: #94a3b8; font-size: 10px; text-anchor: middle; }
+    .blab { fill: #64748b; font-size: 11px; font-weight: 700; letter-spacing: 1px; }
+    .alab { fill: #cbd5e1; font-size: 9.5px; text-anchor: middle; }
+    .leg { fill: #cbd5e1; font-size: 10.5px; }
+    .legt { fill: #64748b; font-size: 11px; font-weight: 700; letter-spacing: 1px; }
+    .cards {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 1rem;
+      margin-top: 1.75rem;
+    }
+    .card { background: rgba(15, 23, 42, 0.5); border-radius: 0.75rem; border: 1px solid #1e293b; padding: 1.1rem; }
+    .card-header { display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.7rem; }
+    .card-dot { width: 9px; height: 9px; border-radius: 50%; }
+    .cyan { background: #22d3ee; } .emerald { background: #34d399; }
+    .violet { background: #a78bfa; } .amber { background: #fbbf24; } .rose { background: #fb7185; }
+    .card h3 { font-size: 0.85rem; font-weight: 600; color: #f1f5f9; }
+    .card ul { list-style: none; color: #94a3b8; font-size: 0.76rem; line-height: 1.7; }
+    .footer { text-align: center; margin-top: 1.4rem; color: #475569; font-size: 0.72rem; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <div class="header-row">
+        <div class="pulse-dot"></div>
+        <h1>codex-on-telegram &mdash; 架构与消息流</h1>
+      </div>
+      <p class="subtitle">从 Telegram 继续本地 Codex 或 Claude Code 会话。一个所有者、一台 Mac &mdash; 完整往返：消息发进来，模型在你的项目里干活，回复与授权请求都回到聊天里。</p>
+    </div>
+
+    <div class="diagram-container">
+      <svg viewBox="0 0 1200 700" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <marker id="ar-cyan" markerWidth="9" markerHeight="9" refX="7" refY="3.2" orient="auto-start-reverse"><path d="M0 0 L8 3.2 L0 6.4 Z" fill="#22d3ee"/></marker>
+          <marker id="ar-green" markerWidth="9" markerHeight="9" refX="7" refY="3.2" orient="auto-start-reverse"><path d="M0 0 L8 3.2 L0 6.4 Z" fill="#34d399"/></marker>
+          <marker id="ar-rose" markerWidth="9" markerHeight="9" refX="7" refY="3.2" orient="auto-start-reverse"><path d="M0 0 L8 3.2 L0 6.4 Z" fill="#fb7185"/></marker>
+          <marker id="ar-violet" markerWidth="9" markerHeight="9" refX="7" refY="3.2" orient="auto-start-reverse"><path d="M0 0 L8 3.2 L0 6.4 Z" fill="#a78bfa"/></marker>
+          <marker id="ar-amber" markerWidth="9" markerHeight="9" refX="7" refY="3.2" orient="auto-start-reverse"><path d="M0 0 L8 3.2 L0 6.4 Z" fill="#fbbf24"/></marker>
+          <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse"><path d="M 40 0 L 0 0 0 40" fill="none" stroke="#0f1a30" stroke-width="0.6"/></pattern>
+        </defs>
+
+        <rect width="1200" height="700" fill="url(#grid)"/>
+
+        <!-- ============ BOUNDARY BOXES ============ -->
+        <rect x="40" y="64" width="690" height="110" rx="14" fill="rgba(8,51,68,0.18)" stroke="#22d3ee" stroke-width="1.1" stroke-dasharray="6 4"/>
+        <text x="54" y="83" class="blab">TELEGRAM &middot; 仅所有者</text>
+
+        <rect x="756" y="64" width="404" height="110" rx="14" fill="rgba(120,53,15,0.18)" stroke="#fbbf24" stroke-width="1.1" stroke-dasharray="6 4"/>
+        <text x="770" y="83" class="blab">MACOS LAUNCHD</text>
+
+        <rect x="40" y="200" width="1120" height="180" rx="14" fill="rgba(6,78,59,0.13)" stroke="#34d399" stroke-width="1.1" stroke-dasharray="6 4"/>
+        <text x="54" y="221" class="blab">桥接守护进程 &middot; ~/.claude-to-im &mdash; src/main.ts 启动，lib/ 运行桥接核心</text>
+
+        <rect x="40" y="414" width="1120" height="110" rx="14" fill="rgba(30,41,59,0.30)" stroke="#94a3b8" stroke-width="1.1" stroke-dasharray="6 4"/>
+        <text x="54" y="434" class="blab">本地运行时引擎 &nbsp;+&nbsp; 你的项目</text>
+
+        <rect x="40" y="556" width="696" height="120" rx="14" fill="rgba(76,29,149,0.16)" stroke="#a78bfa" stroke-width="1.1" stroke-dasharray="6 4"/>
+        <text x="54" y="576" class="blab">持久化 &middot; ~/.claude-to-im</text>
+
+        <rect x="756" y="556" width="404" height="120" rx="14" fill="rgba(15,23,42,0.6)" stroke="#334155" stroke-width="1.1"/>
+        <text x="770" y="576" class="legt">流程图例</text>
+
+        <!-- ============ ARROWS (drawn before boxes) ============ -->
+        <!-- INBOUND cyan -->
+        <path d="M366 124 H400" fill="none" stroke="#22d3ee" stroke-width="2" marker-start="url(#ar-cyan)" marker-end="url(#ar-cyan)"/>
+        <path d="M550 156 V186 H150 V240" fill="none" stroke="#22d3ee" stroke-width="2" marker-end="url(#ar-cyan)"/>
+        <path d="M240 269 H286" fill="none" stroke="#22d3ee" stroke-width="2" marker-end="url(#ar-cyan)"/>
+        <path d="M466 269 H512" fill="none" stroke="#22d3ee" stroke-width="2" marker-end="url(#ar-cyan)"/>
+        <path d="M692 269 H738" fill="none" stroke="#22d3ee" stroke-width="2" marker-end="url(#ar-cyan)"/>
+        <path d="M918 269 H964" fill="none" stroke="#22d3ee" stroke-width="2" marker-end="url(#ar-cyan)"/>
+        <!-- runtime-select -> providers bus -->
+        <path d="M1054 298 V300 H250" fill="none" stroke="#22d3ee" stroke-width="2"/>
+        <path d="M470 300 V452" fill="none" stroke="#22d3ee" stroke-width="2" marker-end="url(#ar-cyan)"/>
+        <path d="M250 300 V452" fill="none" stroke="#22d3ee" stroke-width="2" marker-end="url(#ar-cyan)"/>
+        <!-- providers -> CLI -> project -->
+        <path d="M590 481 H640" fill="none" stroke="#22d3ee" stroke-width="2" marker-end="url(#ar-cyan)"/>
+        <path d="M195 510 V516 H750 V510" fill="none" stroke="#22d3ee" stroke-width="2" marker-end="url(#ar-cyan)"/>
+        <path d="M860 481 H880" fill="none" stroke="#22d3ee" stroke-width="2" marker-start="url(#ar-cyan)" marker-end="url(#ar-cyan)"/>
+
+        <!-- OUTBOUND green -->
+        <path d="M828 298 V306 H150 V312" fill="none" stroke="#34d399" stroke-width="2" marker-end="url(#ar-green)"/>
+        <path d="M130 312 V298" fill="none" stroke="#34d399" stroke-width="2" marker-end="url(#ar-green)"/>
+        <path d="M170 240 V204 H560 V156" fill="none" stroke="#34d399" stroke-width="2" marker-end="url(#ar-green)"/>
+
+        <!-- PERMISSION rose dashed -->
+        <path d="M465 452 V440 H376 V370" fill="none" stroke="#fb7185" stroke-width="1.8" stroke-dasharray="6 4" marker-end="url(#ar-rose)"/>
+        <path d="M466 341 H512" fill="none" stroke="#fb7185" stroke-width="1.8" stroke-dasharray="6 4" marker-end="url(#ar-rose)"/>
+        <path d="M602 370 V378 H150 V370" fill="none" stroke="#fb7185" stroke-width="1.8" stroke-dasharray="6 4" marker-end="url(#ar-rose)"/>
+
+        <!-- PERSISTENCE violet dashed -->
+        <path d="M615 380 V588" fill="none" stroke="#a78bfa" stroke-width="1.8" stroke-dasharray="5 4" marker-start="url(#ar-violet)" marker-end="url(#ar-violet)"/>
+
+        <!-- SUPERVISION amber dashed -->
+        <path d="M958 156 V198" fill="none" stroke="#fbbf24" stroke-width="1.8" stroke-dasharray="5 4" marker-end="url(#ar-amber)"/>
+
+        <!-- arrow labels -->
+        <text x="300" y="180" class="alab">长轮询</text>
+        <text x="870" y="446" class="alab" fill="#94a3b8">读取 / 修改</text>
+        <text x="392" y="200" class="alab" fill="#34d399">发送消息</text>
+        <text x="410" y="448" class="alab" fill="#fb7185">canUseTool</text>
+        <text x="320" y="392" class="alab" fill="#fb7185">聊天里批准</text>
+        <text x="615" y="544" class="alab" fill="#a78bfa">读写状态</text>
+        <text x="1000" y="182" class="alab" fill="#fbbf24">守护</text>
+
+        <!-- ============ COMPONENT BOXES ============ -->
+        <!-- Telegram lane -->
+        <g>
+          <rect x="66" y="92" width="300" height="64" rx="10" fill="#020617"/>
+          <rect x="66" y="92" width="300" height="64" rx="10" fill="rgba(8,51,68,0.7)" stroke="#22d3ee" stroke-width="1.5"/>
+          <text x="216" y="117" class="bt">所有者设备</text>
+          <text x="216" y="137" class="bs">私聊 &middot; 群组 &middot; 话题</text>
+        </g>
+        <g>
+          <rect x="400" y="92" width="300" height="64" rx="10" fill="#020617"/>
+          <rect x="400" y="92" width="300" height="64" rx="10" fill="rgba(8,51,68,0.7)" stroke="#22d3ee" stroke-width="1.5"/>
+          <text x="550" y="117" class="bt">Telegram Bot API</text>
+          <text x="550" y="137" class="bs">长轮询 &middot; 发送消息</text>
+        </g>
+
+        <!-- launchd -->
+        <g>
+          <rect x="782" y="92" width="352" height="64" rx="10" fill="#020617"/>
+          <rect x="782" y="92" width="352" height="64" rx="10" fill="rgba(120,53,15,0.55)" stroke="#fbbf24" stroke-width="1.5"/>
+          <text x="958" y="113" class="bt">launchd 守护</text>
+          <text x="958" y="131" class="bs">KeepAlive &middot; RunAtLoad &middot; 10 秒节流</text>
+          <text x="958" y="147" class="bs">健康检查 &#8594; 崩溃重启</text>
+        </g>
+
+        <!-- Daemon R1 -->
+        <g>
+          <rect x="60" y="240" width="180" height="58" rx="10" fill="#020617"/>
+          <rect x="60" y="240" width="180" height="58" rx="10" fill="rgba(251,146,60,0.34)" stroke="#fb923c" stroke-width="1.5"/>
+          <text x="150" y="265" class="bt">telegram-adapter</text>
+          <text x="150" y="281" class="bs">收发</text>
+        </g>
+        <g>
+          <rect x="286" y="240" width="180" height="58" rx="10" fill="#020617"/>
+          <rect x="286" y="240" width="180" height="58" rx="10" fill="rgba(6,78,59,0.6)" stroke="#34d399" stroke-width="1.5"/>
+          <text x="376" y="265" class="bt">bridge-manager</text>
+          <text x="376" y="281" class="bs">总调度</text>
+        </g>
+        <g>
+          <rect x="512" y="240" width="180" height="58" rx="10" fill="#020617"/>
+          <rect x="512" y="240" width="180" height="58" rx="10" fill="rgba(6,78,59,0.6)" stroke="#34d399" stroke-width="1.5"/>
+          <text x="602" y="265" class="bt">channel-router</text>
+          <text x="602" y="281" class="bs">地址 &#8594; 会话</text>
+        </g>
+        <g>
+          <rect x="738" y="240" width="180" height="58" rx="10" fill="#020617"/>
+          <rect x="738" y="240" width="180" height="58" rx="10" fill="rgba(6,78,59,0.6)" stroke="#34d399" stroke-width="1.5"/>
+          <text x="828" y="265" class="bt">conversation-engine</text>
+          <text x="828" y="281" class="bs">流式 &middot; JSONL</text>
+        </g>
+        <g>
+          <rect x="964" y="240" width="180" height="58" rx="10" fill="#020617"/>
+          <rect x="964" y="240" width="180" height="58" rx="10" fill="rgba(76,29,149,0.55)" stroke="#a78bfa" stroke-width="1.5"/>
+          <text x="1054" y="265" class="bt">运行时选择</text>
+          <text x="1054" y="281" class="bs">codex | claude | auto</text>
+        </g>
+
+        <!-- Daemon R2 -->
+        <g>
+          <rect x="60" y="312" width="180" height="58" rx="10" fill="#020617"/>
+          <rect x="60" y="312" width="180" height="58" rx="10" fill="rgba(251,146,60,0.34)" stroke="#fb923c" stroke-width="1.5"/>
+          <text x="150" y="337" class="bt">delivery-layer</text>
+          <text x="150" y="353" class="bs">分段 &middot; 重试</text>
+        </g>
+        <g>
+          <rect x="286" y="312" width="180" height="58" rx="10" fill="#020617"/>
+          <rect x="286" y="312" width="180" height="58" rx="10" fill="rgba(136,19,55,0.55)" stroke="#fb7185" stroke-width="1.5"/>
+          <text x="376" y="337" class="bt">permission-gateway</text>
+          <text x="376" y="353" class="bs">canUseTool</text>
+        </g>
+        <g>
+          <rect x="512" y="312" width="180" height="58" rx="10" fill="#020617"/>
+          <rect x="512" y="312" width="180" height="58" rx="10" fill="rgba(136,19,55,0.55)" stroke="#fb7185" stroke-width="1.5"/>
+          <text x="602" y="337" class="bt">permission-broker</text>
+          <text x="602" y="353" class="bs">按钮 1 / 2 / 3</text>
+        </g>
+        <g>
+          <rect x="738" y="312" width="180" height="58" rx="10" fill="#020617"/>
+          <rect x="738" y="312" width="180" height="58" rx="10" fill="rgba(251,146,60,0.34)" stroke="#fb923c" stroke-width="1.5"/>
+          <text x="828" y="337" class="bt">outbox-watcher</text>
+          <text x="828" y="353" class="bs">文件推送</text>
+        </g>
+        <g>
+          <rect x="964" y="312" width="180" height="58" rx="10" fill="#020617"/>
+          <rect x="964" y="312" width="180" height="58" rx="10" fill="rgba(6,78,59,0.6)" stroke="#34d399" stroke-width="1.5"/>
+          <text x="1054" y="337" class="bt">codex-sessions</text>
+          <text x="1054" y="353" class="bs">读取 ~/.codex</text>
+        </g>
+
+        <!-- Runtime band -->
+        <g>
+          <rect x="70" y="452" width="250" height="58" rx="10" fill="#020617"/>
+          <rect x="70" y="452" width="250" height="58" rx="10" fill="rgba(6,78,59,0.6)" stroke="#34d399" stroke-width="1.5"/>
+          <text x="195" y="477" class="bt">CodexProvider</text>
+          <text x="195" y="493" class="bs">@openai/codex-sdk</text>
+        </g>
+        <g>
+          <rect x="340" y="452" width="250" height="58" rx="10" fill="#020617"/>
+          <rect x="340" y="452" width="250" height="58" rx="10" fill="rgba(6,78,59,0.6)" stroke="#34d399" stroke-width="1.5"/>
+          <text x="465" y="477" class="bt">SDKLLMProvider</text>
+          <text x="465" y="493" class="bs">claude-agent-sdk</text>
+        </g>
+        <g>
+          <rect x="640" y="452" width="220" height="58" rx="10" fill="#020617"/>
+          <rect x="640" y="452" width="220" height="58" rx="10" fill="rgba(30,41,59,0.85)" stroke="#94a3b8" stroke-width="1.5"/>
+          <text x="750" y="477" class="bt">CLI 子进程</text>
+          <text x="750" y="493" class="bs">在工作目录中</text>
+        </g>
+        <g>
+          <rect x="880" y="452" width="250" height="58" rx="10" fill="#020617"/>
+          <rect x="880" y="452" width="250" height="58" rx="10" fill="rgba(30,41,59,0.85)" stroke="#94a3b8" stroke-width="1.5"/>
+          <text x="1005" y="477" class="bt">你的项目</text>
+          <text x="1005" y="493" class="bs">git 仓库 &middot; 文件</text>
+        </g>
+
+        <!-- Persistence data -->
+        <g>
+          <rect x="66" y="590" width="644" height="74" rx="10" fill="#020617"/>
+          <rect x="66" y="590" width="644" height="74" rx="10" fill="rgba(76,29,149,0.45)" stroke="#a78bfa" stroke-width="1.5"/>
+          <text x="388" y="612" class="bt">data/ &nbsp;&middot;&nbsp; logs/ &nbsp;&middot;&nbsp; runtime/  （崩溃安全 JSON）</text>
+          <text x="388" y="632" class="bs">sessions.json &middot; bindings.json &middot; permissions.json &middot; offsets.json</text>
+          <text x="388" y="650" class="bs">messages/*.jsonl &middot; status.json &middot; bridge.pid &middot; bridge.log</text>
+        </g>
+
+        <!-- Legend -->
+        <g>
+          <line x1="780" y1="594" x2="812" y2="594" stroke="#22d3ee" stroke-width="2.5" marker-end="url(#ar-cyan)"/>
+          <text x="822" y="598" class="leg">进站 &mdash; 消息进来</text>
+          <line x1="780" y1="616" x2="812" y2="616" stroke="#34d399" stroke-width="2.5" marker-end="url(#ar-green)"/>
+          <text x="822" y="620" class="leg">出站 &mdash; 回复返回</text>
+          <line x1="780" y1="638" x2="812" y2="638" stroke="#fb7185" stroke-width="2.5" stroke-dasharray="5 3" marker-end="url(#ar-rose)"/>
+          <text x="822" y="642" class="leg">授权 &mdash; 聊天里批准</text>
+          <line x1="780" y1="660" x2="812" y2="660" stroke="#a78bfa" stroke-width="2.5" stroke-dasharray="5 3" marker-end="url(#ar-violet)"/>
+          <text x="822" y="664" class="leg">持久化 &mdash; 读写状态</text>
+          <line x1="1010" y1="594" x2="1042" y2="594" stroke="#fbbf24" stroke-width="2.5" stroke-dasharray="5 3" marker-end="url(#ar-amber)"/>
+          <text x="1052" y="598" class="leg">launchd 保活</text>
+        </g>
+      </svg>
+    </div>
+
+    <div class="cards">
+      <div class="card">
+        <div class="card-header"><div class="card-dot cyan"></div><h3>Telegram（仅所有者）</h3></div>
+        <ul>
+          <li>&bull; 私聊、群组与话题</li>
+          <li>&bull; Bot API 长轮询拉取新消息</li>
+          <li>&bull; 回复 + 内联授权按钮发回聊天</li>
+          <li>&bull; 通过白名单锁定为你专属</li>
+        </ul>
+      </div>
+      <div class="card">
+        <div class="card-header"><div class="card-dot emerald"></div><h3>桥接守护（共享核心）</h3></div>
+        <ul>
+          <li>&bull; channel-router 把每个聊天映射到会话</li>
+          <li>&bull; conversation-engine 流式处理对话</li>
+          <li>&bull; delivery-layer 分段并重试回复</li>
+          <li>&bull; 橙色 = 面向 Telegram 与文件的 I/O 边界</li>
+        </ul>
+      </div>
+      <div class="card">
+        <div class="card-header"><div class="card-dot rose"></div><h3>授权网关</h3></div>
+        <ul>
+          <li>&bull; 工具调用在 canUseTool 处暂停</li>
+          <li>&bull; 请求被推送到 Telegram</li>
+          <li>&bull; 用按钮、1/2/3 或 /perm 批准</li>
+          <li>&bull; 可在配置中开启自动批准</li>
+        </ul>
+      </div>
+      <div class="card">
+        <div class="card-header"><div class="card-dot violet"></div><h3>运行时 + 持久化</h3></div>
+        <ul>
+          <li>&bull; CTI_RUNTIME 选择 Codex、Claude 或 auto</li>
+          <li>&bull; 引擎在你的项目目录里运行 CLI</li>
+          <li>&bull; 状态以 JSON 存于 ~/.claude-to-im</li>
+          <li>&bull; 会话重启不丢 &mdash; 无需重新绑定</li>
+        </ul>
+      </div>
+      <div class="card">
+        <div class="card-header"><div class="card-dot amber"></div><h3>守护（macOS）</h3></div>
+        <ul>
+          <li>&bull; launchd 让守护进程保持存活</li>
+          <li>&bull; 健康检查在失败时重启</li>
+          <li>&bull; 密钥只存 config.env，不入 plist</li>
+          <li>&bull; 节流重启，避免崩溃循环</li>
+        </ul>
+      </div>
+    </div>
+
+    <p class="footer">codex-on-telegram &middot; 自包含架构图 &middot; 由 architecture-diagram-generator 技能生成</p>
+  </div>
+</body>
+</html>
